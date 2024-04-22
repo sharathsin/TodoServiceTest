@@ -1,12 +1,16 @@
 package com.telus.todoservice;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.telus.todoservice.model.ApiError;
 import com.telus.todoservice.model.CompletionStatus;
 import com.telus.todoservice.model.Todo;
+import com.telus.todoservice.service.TodoService;
+import org.junit.Before;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -33,6 +38,8 @@ public class TodoControllerIntegrationTests {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private Long createdTodoId;
+    @SpyBean
+    private TodoService todoService;
 
     @BeforeEach
     public void setup() throws Exception {
@@ -47,7 +54,7 @@ public class TodoControllerIntegrationTests {
 
     @AfterEach
     public void cleanup() throws Exception {
-        // Clean up by deleting the created todo
+        // Delete the created todo
         mockMvc.perform(MockMvcRequestBuilders.delete("/todos/" + createdTodoId));
     }
 
@@ -56,6 +63,22 @@ public class TodoControllerIntegrationTests {
         mockMvc.perform(get("/todos"))
                .andExpect(status().isOk())
                .andExpect(jsonPath("$").isArray());
+    }
+    @Test
+    public void testGlobalExceptionHandler() throws Exception {
+        // Arrange
+        String invalidBodyContent = "{invalid_json}"; // This will trigger an HttpMessageNotReadableException
+
+        // Act and Assert
+        MvcResult mvcResult = mockMvc.perform(post("/todos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidBodyContent))
+                .andExpect(status().isInternalServerError())
+                .andReturn();
+
+        // Parse and check the returned ApiError
+        ApiError error = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ApiError.class);
+        assertEquals(error.getMessage(),"JSON parse error: Unexpected character ('i' (code 105)): was expecting double-quote to start field name");
     }
 
     @Test

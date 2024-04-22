@@ -14,6 +14,9 @@ public class ApiError {
         this.details = details;
     }
 
+    public ApiError() {
+    }
+
     // Getters and Setters
     public Date getTimestamp() {
         return timestamp;

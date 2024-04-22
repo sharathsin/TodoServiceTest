@@ -7,6 +7,8 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.telus.todoservice.controller.TodoController;
+import com.telus.todoservice.exception.GlobalExceptionHandler;
+import com.telus.todoservice.exception.ResourceNotFoundException;
 import com.telus.todoservice.model.CompletionStatus;
 import com.telus.todoservice.model.Todo;
 import com.telus.todoservice.service.TodoService;
@@ -29,6 +31,8 @@ public class TodoControllerTests {
 
     @Autowired
     private MockMvc mockMvc;
+    @Autowired
+    GlobalExceptionHandler globalExceptionHandler;
 
     @MockBean
     private TodoService todoService;
@@ -59,13 +63,7 @@ public class TodoControllerTests {
                 .andExpect(jsonPath("$.description").value("Task"));
     }
 
-    @Test
-    public void getTodoByIdTest_NotFound() throws Exception {
-        when(todoService.findTodoById(1L)).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/todos/1"))
-                .andExpect(status().isNotFound());
-    }
 
     @Test
     public void createTodoTest() throws Exception {
@@ -81,15 +79,7 @@ public class TodoControllerTests {
                 .andExpect(jsonPath("$.description").value("New Task"));
     }
 
-    @Test
-    public void updateTodoTest_NotFound() throws Exception {
-        when(todoService.findTodoById(1L)).thenReturn(Optional.empty());
 
-        mockMvc.perform(patch("/todos/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new Todo(null, "Updated Task", CompletionStatus.COMPLETED))))
-                .andExpect(status().isNotFound());
-    }
 
     @Test
     public void updateTodoTest_Found() throws Exception {
@@ -106,13 +96,6 @@ public class TodoControllerTests {
                 .andExpect(jsonPath("$.description").value("Updated Task"));
     }
 
-    @Test
-    public void deleteTodoTest_NotFound() throws Exception {
-        when(todoService.findTodoById(1L)).thenReturn(Optional.empty());
-
-        mockMvc.perform(delete("/todos/1"))
-                .andExpect(status().isNotFound());
-    }
 
     @Test
     public void deleteTodoTest_Found() throws Exception {

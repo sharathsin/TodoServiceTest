@@ -1,6 +1,7 @@
 package com.telus.todoservice.controller;
 
 
+import com.telus.todoservice.exception.ResourceNotFoundException;
 import com.telus.todoservice.model.Todo;
 import com.telus.todoservice.service.TodoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +32,7 @@ public class TodoController {
     public ResponseEntity<Todo> getTodoById(@PathVariable Long id) {
         return todoService.findTodoById(id)
                 .map(todo -> ResponseEntity.ok(todo))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseThrow(() -> new ResourceNotFoundException("Todo not found"));
     }
 
     @PostMapping
@@ -48,13 +49,13 @@ public class TodoController {
                     Todo updatedTodo = todoService.update(existingTodo);
                     return new ResponseEntity<>(updatedTodo, HttpStatus.OK);
                 })
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseThrow(() -> new ResourceNotFoundException("Todo not found"));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTodo(@PathVariable Long id) {
         if (!todoService.findTodoById(id).isPresent()) {
-            return ResponseEntity.notFound().build();
+           throw new ResourceNotFoundException("Todo not found");
         }
         todoService.deleteTodo(id);
         return ResponseEntity.ok().build();

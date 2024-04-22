@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+package com.telus.todoservice.grpc;
+
+import "google/protobuf/empty.proto";
+
+message TodoRequest {
+  string id = 1;
+}
+
+message todos{
+  string id = 1;
+  string description = 2;
+  string completion_status = 3;
+}
+
+message TodoList {
+  repeated todos todos = 1;
+}
+
+service TodoService {
+  rpc GetAllTodos(google.protobuf.Empty) returns (TodoList);
+  rpc GetTodoById(TodoRequest) returns (todos);
+  rpc CreateTodo(todos) returns (todos);
+  rpc UpdateTodo(todos) returns (todos);
+  rpc DeleteTodo(TodoRequest) returns (google.protobuf.Empty);
+}

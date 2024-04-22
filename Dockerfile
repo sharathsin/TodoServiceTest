@@ -1,5 +1,6 @@
 FROM openjdk:17-oracle as build
 EXPOSE 8080
+EXPOSE 8081
 VOLUME /tmp
 WORKDIR /workspace/app
 COPY mvnw .
